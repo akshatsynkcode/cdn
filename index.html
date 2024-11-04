@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Wallet</title>
+    <!-- Include SweetAlert2 for alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <h1>Connect Your Wallet</h1>
+    <button id="detectButton">Detect Wallet</button>
+    <button id="connectButton" disabled>Connect Wallet</button>
+
+    <!-- Import WalletManager script as a module -->
+    <script type="module">
+        import { WalletManager } from "./cdn/walletmanager.js";
+
+        const detectButton = document.getElementById('detectButton');
+        const connectButton = document.getElementById('connectButton');
+
+        const extensionId = "alicnnjigbccdffhhajeinhpfeababmo"; // Replace with your actual extension ID
+        const walletManager = new WalletManager(extensionId);
+
+        // Detect Wallet Extension
+        detectButton.addEventListener('click', async () => {
+            console.log("Detect Wallet button clicked");
+            try {
+                const isDetected = await walletManager.detectExtension();
+                if (isDetected) {
+                    console.log("Wallet detected!");
+                    connectButton.disabled = false;
+                    Swal.fire({
+                        text: 'Wallet detected successfully!',
+                        icon: "success",
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    Swal.fire({
+                        text: 'Wallet extension not detected. Ensure it is installed and active.',
+                        icon: "warning",
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: 'OK'
+                    });
+                }
+            } catch (error) {
+                console.error("Error detecting wallet:", error);
+                Swal.fire({
+                    text: 'An error occurred while detecting the wallet. Check the console for details.',
+                    icon: "error",
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+
+        // Connect Wallet
+        connectButton.addEventListener('click', async () => {
+            console.log("Connect Wallet button clicked");
+            try {
+                const authToken = await walletManager.connectWallet();
+                if (authToken) {
+                    console.log("Received auth token:", authToken);
+                    Swal.fire({
+                        text: 'Wallet connected successfully! Auth Token: ' + authToken,
+                        icon: "success",
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: 'OK'
+                    });
+                }
+            } catch (error) {
+                console.error("Error connecting wallet:", error);
+                Swal.fire({
+                    text: 'An error occurred while connecting the wallet. Check the console for details.',
+                    icon: "error",
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    </script>    
+</body>
+</html>
