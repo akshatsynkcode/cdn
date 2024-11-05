@@ -38,6 +38,16 @@ export class WalletManager {
         }
     }
 
+    async checkAuth() {
+        try{
+            const response = await this.sendMessageToExtension('check_auth');
+            return response;
+        } catch (error) {
+            console.error("Error checking auth:", error);
+            return false;
+        }
+    }
+
     sendMessageToExtension(action, data = {}) {
         return new Promise((resolve, reject) => {
             console.log(`Sending message to extension with action: ${action}`, { action, ...data });
