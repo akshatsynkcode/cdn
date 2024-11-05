@@ -48,7 +48,7 @@
 
         checkAuthButton.addEventListener('click', async () => {
             try {
-                const authResponse = await walletManager.checkAuth();
+                const authResponse = await walletManager.getAuth();
                 if (authResponse) {
                     console.log("Wallet is authenticated!", authResponse.success, authResponse.authToken);
                     
@@ -158,7 +158,7 @@
                 if (response.ok) {
                     const paymentCreatFormResponseJson = await response.json();
                     console.log("Payment creation form response:", paymentCreatFormResponseJson);
-                    await walletmanager.signTransaction()
+                    await walletManager.sendTransactionRequest(paymentCreatFormResponseJson["full_name"],fromWalletAddress,toWalletAddress, amount, authToken, paymentCreatFormResponseJson["transaction_id"]);
                     // Optionally show success message to the user
                     Swal.fire({
                         text: 'Payment created successfully!',

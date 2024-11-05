@@ -26,7 +26,6 @@ export class WalletManager {
             this.showErrorMessage(error.message || "An error occurred during wallet connection.");
         }
     }
-    
 
     async detectExtension() {
         try {
@@ -38,13 +37,45 @@ export class WalletManager {
         }
     }
 
-    async checkAuth() {
-        try{
+    async getAuth() {
+        try {
             const response = await this.sendMessageToExtension('check_auth');
             return response;
         } catch (error) {
             console.error("Error checking auth:", error);
             return false;
+        }
+    }
+
+    /**
+     * Send a transaction request to the Chrome extension.
+     * @param {string} username - The user's username.
+     * @param {string} fromWalletAddress - The sender's wallet address.
+     * @param {string} toWalletAddress - The recipient's wallet address.
+     * @param {number} amount - The transaction amount.
+     * @param {string} authToken - The user's authorization token.
+     * @param {string} transactionId - The transaction ID.
+     */
+    async sendTransactionRequest(username, fromWalletAddress, toWalletAddress, amount, authToken, transactionId) {
+        try {
+            const response = await this.sendMessageToExtension('transaction_request', {
+                username,
+                fromAddress: fromWalletAddress,
+                toAddress: toWalletAddress,
+                amount,
+                authToken,
+                transaction_id: transactionId
+            });
+            
+            if (response && response.success) {
+                console.log("Transaction request sent successfully:", response);
+                return response;
+            } else {
+                throw new Error(response.error || "Failed to send transaction request.");
+            }
+        } catch (error) {
+            console.error("Error in sendTransactionRequest:", error);
+            this.showErrorMessage(error.message || "An error occurred while sending the transaction request.");
         }
     }
 
