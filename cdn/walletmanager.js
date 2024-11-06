@@ -55,16 +55,18 @@ export class WalletManager {
      * @param {number} amount - The transaction amount.
      * @param {string} authToken - The user's authorization token.
      * @param {string} transactionId - The transaction ID.
+    *  @param {string} url - The URL of Pusher.
      */
-    async sendTransactionRequest(username, fromWalletAddress, toWalletAddress, amount, authToken, transactionId) {
+    async sendTransactionRequest(username, fromWalletAddress, toWalletAddress, amount, authToken, transactionId, url) {
         try {
             const response = await this.sendMessageToExtension('transaction_request', {
-                username,
-                fromAddress: fromWalletAddress,
                 toAddress: toWalletAddress,
                 amount,
+                fromAddress: fromWalletAddress,
+                transaction_id: transactionId,
+                username,
                 authToken,
-                transaction_id: transactionId
+                url
             });
             
             if (response && response.success) {
