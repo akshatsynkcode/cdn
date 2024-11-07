@@ -47,37 +47,40 @@ export class WalletManager {
         }
     }
 
-    /**
-     * Send a transaction request to the Chrome extension.
-     * @param {string} username - The user's username.
-     * @param {string} fromWalletAddress - The sender's wallet address.
-     * @param {string} toWalletAddress - The recipient's wallet address.
-     * @param {number} amount - The transaction amount.
-     * @param {string} authToken - The user's authorization token.
-     * @param {string} transactionId - The transaction ID.
-    *  @param {string} url - The URL of Pusher.
-     */
-    async sendTransactionRequest(username, fromWalletAddress, toWalletAddress, amount, authToken, transactionId, url) {
+    async fetchAndUpdateBalance() {
+        const loader = document.getElementById('balance-loader');
+        if (loader) {
+            loader.style.display = 'inline-block'; // Show loader before fetching balance
+        }
+
         try {
-            const response = await this.sendMessageToExtension('transaction_request', {
-                toAddress: toWalletAddress,
-                amount,
-                fromAddress: fromWalletAddress,
-                transaction_id: transactionId,
-                username,
-                authToken,
-                url
+            const { authToken } = await chrome.storage.sync.get('authToken');
+            if (!authToken) {
+                console.error('Authorization token is missing');
+                this.redirectToLogin();
+                return;
+            }
+
+            const response = await fetch('https://dev-wallet-api.dubaicustoms.network/api/ext-balance', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}` }
             });
-            
-            if (response && response.success) {
-                console.log("Transaction request sent successfully:", response);
-                return response;
+
+            if (response.ok) {
+                const { balance } = await response.json();
+                document.getElementById('balance').textContent = `AED ${this.formatAmount(parseFloat(balance).toFixed(3))}`;
+            } else if (response.status === 401) {
+                console.error('Token expired or invalid, redirecting to login.');
+                this.redirectToLogin();
             } else {
-                throw new Error(response.error || "Failed to send transaction request.");
+                console.error('Failed to fetch balance:', response.statusText);
             }
         } catch (error) {
-            console.error("Error in sendTransactionRequest:", error);
-            this.showErrorMessage(error.message || "An error occurred while sending the transaction request.");
+            console.error('Error fetching balance:', error);
+        } finally {
+            if (loader) {
+                loader.style.display = 'none'; // Hide loader after balance is fetched
+            }
         }
     }
 
@@ -95,7 +98,7 @@ export class WalletManager {
             });
         });
     }
-    
+
     showErrorMessage(message) {
         Swal.fire({
             text: message,
@@ -103,5 +106,17 @@ export class WalletManager {
             confirmButtonColor: "#3085d6",
             confirmButtonText: 'OK'
         });
+    }
+
+    redirectToLogin() {
+        // Implement redirection to login
+        window.location.href = '/login.html'; // Replace with the actual login URL if needed
+    }
+
+    formatAmount(amount) {
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
     }
 }
