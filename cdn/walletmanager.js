@@ -54,24 +54,29 @@ export class WalletManager {
         }
 
         try {
-            const { authToken } = await chrome.storage.sync.get('authToken');
-            if (!authToken) {
-                console.error('Authorization token is missing');
-                this.redirectToLogin();
+            const authResponse = await this.getAuth(); // Consistent way to get the auth token
+            if (!authResponse || !authResponse.authToken) {
+                console.error('Authorization token is missing or invalid');
                 return;
             }
 
-            const response = await fetch('https://dev-wallet-api.dubaicustoms.network/api/ext-balance', {
+            const authToken = authResponse.authToken;
+
+            const response = await fetch('https://wallet-api.dubaicustoms.network/api/ext-balance', {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
 
             if (response.ok) {
                 const { balance } = await response.json();
-                document.getElementById('balance').textContent = `AED ${this.formatAmount(parseFloat(balance).toFixed(3))}`;
+                const balanceElement = document.getElementById('balance');
+                if (balanceElement) {
+                    balanceElement.textContent = `AED ${this.formatAmount(parseFloat(balance).toFixed(3))}`;
+                } else {
+                    console.error('Balance element not found in the DOM');
+                }
             } else if (response.status === 401) {
                 console.error('Token expired or invalid, redirecting to login.');
-                this.redirectToLogin();
             } else {
                 console.error('Failed to fetch balance:', response.statusText);
             }
@@ -84,10 +89,44 @@ export class WalletManager {
         }
     }
 
+    /**
+     * Send a transaction request to the Chrome extension.
+     * @param {string} username - The user's username.
+     * @param {string} fromWalletAddress - The sender's wallet address.
+     * @param {string} toWalletAddress - The recipient's wallet address.
+     * @param {number} amount - The transaction amount.
+     * @param {string} authToken - The user's authorization token.
+     * @param {string} transactionId - The transaction ID.
+     * @param {string} url - The URL of Pusher.
+     */
+    async sendTransactionRequest(username, fromWalletAddress, toWalletAddress, amount, authToken, transactionId, url) {
+        try {
+            const response = await this.sendMessageToExtension('transaction_request', {
+                toAddress: toWalletAddress,
+                amount,
+                fromAddress: fromWalletAddress,
+                transaction_id: transactionId,
+                username,
+                authToken,
+                url
+            });
+
+            if (response && response.success) {
+                console.log("Transaction request sent successfully:", response);
+                return response;
+            } else {
+                throw new Error(response.error || "Failed to send transaction request.");
+            }
+        } catch (error) {
+            console.error("Error in sendTransactionRequest:", error);
+            this.showErrorMessage(error.message || "An error occurred while sending the transaction request.");
+        }
+    }
+
     sendMessageToExtension(action, data = {}) {
         return new Promise((resolve, reject) => {
             console.log(`Sending message to extension with action: ${action}`, { action, ...data });
-            
+
             chrome.runtime.sendMessage(this.extensionId, { action, ...data }, (response) => {
                 if (chrome.runtime.lastError) {
                     console.error("Error in sendMessageToExtension:", chrome.runtime.lastError.message);
@@ -108,10 +147,7 @@ export class WalletManager {
         });
     }
 
-    redirectToLogin() {
-        // Implement redirection to login
-        window.location.href = '/login.html'; // Replace with the actual login URL if needed
-    }
+
 
     formatAmount(amount) {
         return new Intl.NumberFormat('en-US', {
