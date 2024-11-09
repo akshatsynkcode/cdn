@@ -16,7 +16,7 @@
 <body>
     <h1>Connect Your Wallet</h1>
     <button id="detectButton">Detect Wallet</button>
-    <button id="connectButton" disabled>Connect Wallet</button>
+    <button id="connectButton">Connect Wallet</button>
     <button id="checkAuth">Check Auth</button>
     <button id="fetchBalanceButton">Fetch Balance</button>
 
@@ -61,20 +61,37 @@
         let authToken;
 
 
-        checkAuthButton.addEventListener('click', async () => {
-            try {
-                const authResponse = await walletManager.getAuth();
-                if (authResponse) {
-                    console.log("Wallet is authenticated!", authResponse.success, authResponse.authToken);
+        // checkAuthButton.addEventListener('click', async () => {
+        //     try {
+        //         const authResponse = await walletManager.getAuth();
+        //         console.log("Auth Response:", authResponse);
+        //         if (authResponse) {
+        //             console.log("Wallet is authenticated!", authResponse.success, authResponse.authToken);
 
-                } else {
-                    console.log("Wallet is not authenticated!");
-                    checkAuthButton.disabled = false;
-                }
-            } catch (error) {
-                console.error("Error checking auth:", error);
-            }
-        })
+        //         } else {
+        //             console.log("Wallet is not authenticated!");
+        //             checkAuthButton.disabled = false;
+        //         }
+        //     } catch (error) {
+        //         console.error("Error checking auth:", error);
+        //     }
+        // })
+
+
+        checkAuthButton.addEventListener('click', async () => {
+    try {
+        const isAuth = await walletManager.getAuth();
+        console.log("isAuth", isAuth);
+        if (isAuth) {
+            Swal.fire('Wallet is authenticated!', '', 'success');
+        } else {
+            Swal.fire('Wallet is not authenticated.', '', 'warning');
+        }
+    } catch (error) {
+        console.error('Error checking auth:', error);
+    }
+});
+
 
         // Detect Wallet Extension
         detectButton.addEventListener('click', async () => {
