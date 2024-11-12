@@ -1,267 +1,319 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wallet Payment</title>
 
     <!-- Include SweetAlert2 for alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pusher/8.3.0/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AmagiTech/JSLoader/amagiloader.js"></script>
+  </head>
 
-</head>
-
-<body>
+  <body>
     <h1>Connect Your Wallet</h1>
     <button id="detectButton">Detect Wallet</button>
     <button id="connectButton">Connect Wallet</button>
     <button id="checkAuth">Check Auth</button>
     <button id="fetchBalanceButton">Fetch Balance</button>
 
-    <div id="balance-loader" style="display: none;">Loading...</div>
+    <div id="balance-loader" style="display: none">Loading...</div>
     <p id="balance">Your balance will be displayed here</p>
 
     <h2>Payment Details</h2>
     <form id="paymentForm">
-        <input type="hidden" id="authToken" value="">
-        <p id="authTokenText"></p>
-        <label for="fromWalletAddress">From Wallet Address:</label>
-        <input type="text" id="fromWalletAddress" name="fromWalletAddress" placeholder="Your wallet address"
-            required><br><br>
+      <input type="hidden" id="authToken" value="" />
+      <p id="authTokenText"></p>
+      <label for="fromWalletAddress">From Wallet Address:</label>
+      <input
+        type="text"
+        id="fromWalletAddress"
+        name="fromWalletAddress"
+        placeholder="Your wallet address"
+        required
+      /><br /><br />
 
-        <label for="toWalletAddress">To Wallet Address:</label>
-        <input type="text" id="toWalletAddress" name="toWalletAddress" placeholder="Recipient's wallet address"
-            required><br><br>
+      <label for="toWalletAddress">To Wallet Address:</label>
+      <input
+        type="text"
+        id="toWalletAddress"
+        name="toWalletAddress"
+        placeholder="Recipient's wallet address"
+        required
+      /><br /><br />
 
-        <label for="amount">Amount:</label>
-        <input type="number" id="amount" name="amount" placeholder="Enter amount" required><br><br>
+      <label for="amount">Amount:</label>
+      <input
+        type="number"
+        id="amount"
+        name="amount"
+        placeholder="Enter amount"
+        required
+      /><br /><br />
 
-        <button type="button" id="payButton">Make Payment</button>
+      <button type="button" id="payButton">Make Payment</button>
     </form>
 
     <!-- Import WalletManager script as a module -->
     <script type="module">
-        var pusher = new Pusher("908a6e9cd560593f02a0", {
-            cluster: "ap2",
-        });
-        console.log("Pusher:", pusher);
+      var pusher = new Pusher("908a6e9cd560593f02a0", {
+        cluster: "ap2",
+      });
+      console.log("Pusher:", pusher);
 
-        let timeStamp;
-        import { WalletManager } from "./cdn/walletmanager.js";
+      let timeStamp;
+      import { WalletManager } from "./cdn/walletmanager.js";
 
-        const detectButton = document.getElementById('detectButton');
-        const connectButton = document.getElementById('connectButton');
-        const payButton = document.getElementById('payButton');
-        const extensionId = "alicnnjigbccdffhhajeinhpfeababmo"; // Replace with your actual extension ID
-        const walletManager = new WalletManager(extensionId);
-        const checkAuthButton = document.getElementById('checkAuth');
-        const fetchBalanceButton = document.getElementById('fetchBalanceButton');
-        let authToken;
+      const detectButton = document.getElementById("detectButton");
+      const connectButton = document.getElementById("connectButton");
+      const payButton = document.getElementById("payButton");
+      const extensionId = "alicnnjigbccdffhhajeinhpfeababmo"; // Replace with your actual extension ID
+      const walletManager = new WalletManager(extensionId);
+      const checkAuthButton = document.getElementById("checkAuth");
+      const fetchBalanceButton = document.getElementById("fetchBalanceButton");
+      let authToken;
 
+      // checkAuthButton.addEventListener('click', async () => {
+      //     try {
+      //         const authResponse = await walletManager.getAuth();
+      //         console.log("Auth Response:", authResponse);
+      //         if (authResponse) {
+      //             console.log("Wallet is authenticated!", authResponse.success, authResponse.authToken);
 
-        // checkAuthButton.addEventListener('click', async () => {
-        //     try {
-        //         const authResponse = await walletManager.getAuth();
-        //         console.log("Auth Response:", authResponse);
-        //         if (authResponse) {
-        //             console.log("Wallet is authenticated!", authResponse.success, authResponse.authToken);
+      //         } else {
+      //             console.log("Wallet is not authenticated!");
+      //             checkAuthButton.disabled = false;
+      //         }
+      //     } catch (error) {
+      //         console.error("Error checking auth:", error);
+      //     }
+      // })
 
-        //         } else {
-        //             console.log("Wallet is not authenticated!");
-        //             checkAuthButton.disabled = false;
-        //         }
-        //     } catch (error) {
-        //         console.error("Error checking auth:", error);
-        //     }
-        // })
-
-
-        checkAuthButton.addEventListener('click', async () => {
-    try {
-        const isAuth = await walletManager.getAuth();
-        console.log("isAuth", isAuth);
-        if (isAuth) {
-            Swal.fire('Wallet is authenticated!', '', 'success');
-        } else {
-            Swal.fire('Wallet is not authenticated.', '', 'warning');
+      checkAuthButton.addEventListener("click", async () => {
+        try {
+          const isAuth = await walletManager.getAuth();
+          console.log("isAuth", isAuth);
+          if (isAuth) {
+            Swal.fire("Wallet is authenticated!", "", "success");
+          } else {
+            Swal.fire("Wallet is not authenticated.", "", "warning");
+          }
+        } catch (error) {
+          console.error("Error checking auth:", error);
         }
-    } catch (error) {
-        console.error('Error checking auth:', error);
-    }
-});
+      });
 
+      // Detect Wallet Extension
+      detectButton.addEventListener("click", async () => {
+        console.log("Detect Wallet button clicked");
+        try {
+          const isDetected = await walletManager.detectExtension();
+          if (isDetected) {
+            console.log("Wallet detected!");
+            connectButton.disabled = false;
+            Swal.fire({
+              text: "Wallet detected successfully!",
+              icon: "success",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "OK",
+            });
+          } else {
+            Swal.fire({
+              text: "Wallet extension not detected. Ensure it is installed and active.",
+              icon: "warning",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "OK",
+            });
+          }
+        } catch (error) {
+          console.error("Error detecting wallet:", error);
+          Swal.fire({
+            text: "An error occurred while detecting the wallet. Check the console for details.",
+            icon: "error",
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "OK",
+          });
+        }
+      });
 
-        // Detect Wallet Extension
-        detectButton.addEventListener('click', async () => {
-            console.log("Detect Wallet button clicked");
-            try {
-                const isDetected = await walletManager.detectExtension();
-                if (isDetected) {
-                    console.log("Wallet detected!");
-                    connectButton.disabled = false;
-                    Swal.fire({
-                        text: 'Wallet detected successfully!',
-                        icon: "success",
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    Swal.fire({
-                        text: 'Wallet extension not detected. Ensure it is installed and active.',
-                        icon: "warning",
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: 'OK'
-                    });
-                }
-            } catch (error) {
-                console.error("Error detecting wallet:", error);
-                Swal.fire({
-                    text: 'An error occurred while detecting the wallet. Check the console for details.',
-                    icon: "error",
-                    confirmButtonColor: "#3085d6",
-                    confirmButtonText: 'OK'
-                });
+      fetchBalanceButton.addEventListener("click", async () => {
+        try {
+          const balance = await walletManager.fetchAndUpdateBalance();
+          if (balance !== false) {
+            // Render the fetched balance in the HTML
+            document.getElementById(
+              "balance"
+            ).textContent = `Your balance is: AED ${balance}`;
+            Swal.fire({
+              text: `Balance fetched successfully! Your balance is: AED ${balance}`,
+              icon: "success",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "OK",
+            });
+          } else {
+            console.error(
+              "Failed to fetch balance or balance is not available."
+            );
+            Swal.fire({
+              text: "Failed to fetch balance. Please try again later.",
+              icon: "warning",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "OK",
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching balance:", error);
+          Swal.fire({
+            text: "An error occurred while fetching the balance.",
+            icon: "error",
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "OK",
+          });
+        }
+      });
+
+      // Connect Wallet
+      connectButton.addEventListener("click", async () => {
+        console.log("Connect Wallet button clicked");
+        try {
+          authToken = await walletManager.connectWallet();
+          if (authToken) {
+            console.log("Received auth token:", authToken);
+            document.getElementById("authToken").value = authToken;
+            document.getElementById("authTokenText").textContent =
+              "Auth Token: " + authToken;
+            payButton.disabled = false; // Enable pay button once wallet is connected
+            Swal.fire({
+              text: "Wallet connected successfully! Auth Token: " + authToken,
+              icon: "success",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "OK",
+            });
+          }
+        } catch (error) {
+          console.error("Error connecting wallet:", error);
+          Swal.fire({
+            text: "An error occurred while connecting the wallet. Check the console for details.",
+            icon: "error",
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "OK",
+          });
+        }
+      });
+
+      // Make Payment
+      payButton.addEventListener("click", async () => {
+        AmagiLoader.show();
+
+        timeStamp =
+          new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000;
+        console.log("Time stamp:", timeStamp);
+        const fromWalletAddress = document
+          .getElementById("fromWalletAddress")
+          .value.trim();
+        const toWalletAddress = document
+          .getElementById("toWalletAddress")
+          .value.trim();
+        const amount = parseFloat(document.getElementById("amount").value);
+        const url = window.location.origin;
+        console.log("URL:", url);
+
+        // Validate input
+        if (
+          !fromWalletAddress ||
+          !toWalletAddress ||
+          isNaN(amount) ||
+          amount <= 0
+        ) {
+          Swal.fire({
+            text: "Please fill in all payment details correctly.",
+            icon: "warning",
+            confirmButtonText: "OK",
+          });
+          return;
+        }
+        localStorage.setItem("timeStamp", timeStamp);
+        try {
+          const requestData = {
+            from_wallet_address: fromWalletAddress,
+            to_wallet_address: toWalletAddress,
+            amount: parseInt(amount, 10),
+            module_id: "gpncoahadcccmbkhdpblfiikpaiibmme",
+            unique_id: timeStamp,
+            module_type: "Test",
+          };
+          const response = await fetch(
+            "https://log-iam-temp.finloge.com/api/ext-transaction",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Bearer ${authToken}`,
+              },
+              body: JSON.stringify(requestData),
             }
-        });
+          );
+          setTimeout(async () => {
+            // This code block will only execute after 5 seconds
+            if (response.ok) {
+              const paymentCreatFormResponseJson = await response.json();
+              console.log(
+                "Payment creation form response:",
+                paymentCreatFormResponseJson
+              );
+              await walletManager.sendTransactionRequest(
+                paymentCreatFormResponseJson["full_name"],
+                fromWalletAddress,
+                toWalletAddress,
+                amount,
+                authToken,
+                paymentCreatFormResponseJson["transaction_id"],
+                url
+              );
 
-
-        fetchBalanceButton.addEventListener('click', async () => {
-            try {
-                await walletManager.fetchAndUpdateBalance();
-            } catch (error) {
-                console.error("Error fetching balance:", error);
+              // Optionally show success message to the user
+              Swal.fire({
+                text: "Payment created successfully!",
+                icon: "success",
+                confirmButtonText: "OK",
+              });
+            } else {
+              const error = await response.json();
+              console.error("Unexpected error:", error);
+              Swal.fire({
+                text: "An unexpected error occurred. Please try again.",
+                icon: "error",
+                confirmButtonText: "OK",
+              });
             }
-        });
-        // Connect Wallet
-        connectButton.addEventListener('click', async () => {
-            console.log("Connect Wallet button clicked");
-            try {
-                authToken = await walletManager.connectWallet();
-                if (authToken) {
-                    console.log("Received auth token:", authToken);
-                    document.getElementById('authToken').value = authToken;
-                    document.getElementById('authTokenText').textContent = 'Auth Token: ' + authToken;
-                    payButton.disabled = false; // Enable pay button once wallet is connected
-                    Swal.fire({
-                        text: 'Wallet connected successfully! Auth Token: ' + authToken,
-                        icon: "success",
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: 'OK'
-                    });
-                }
-            } catch (error) {
-                console.error("Error connecting wallet:", error);
-                Swal.fire({
-                    text: 'An error occurred while connecting the wallet. Check the console for details.',
-                    icon: "error",
-                    confirmButtonColor: "#3085d6",
-                    confirmButtonText: 'OK'
-                });
-            }
-        });
+          }, 1000); // 5000 milliseconds = 5 seconds
+        } catch (error) {
+          console.error("Unexpected error:", error);
+          Swal.fire({
+            text: "An unexpected error occurred. Please try again.",
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+        }
+      });
 
-        // Make Payment
-        payButton.addEventListener('click', async () => {
-            AmagiLoader.show();
-
-            timeStamp = new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000;
-            console.log("Time stamp:", timeStamp);
-            const fromWalletAddress = document.getElementById('fromWalletAddress').value.trim();
-            const toWalletAddress = document.getElementById('toWalletAddress').value.trim();
-            const amount = parseFloat(document.getElementById('amount').value);
-            const url = window.location.origin;
-            console.log("URL:", url);
-
-            // Validate input
-            if (!fromWalletAddress || !toWalletAddress || isNaN(amount) || amount <= 0 ) {
-                Swal.fire({
-                    text: "Please fill in all payment details correctly.",
-                    icon: "warning",
-                    confirmButtonText: "OK"
-                });
-                return;
-            }
-            localStorage.setItem("timeStamp", timeStamp);
-            try {
-                const requestData = {
-                    from_wallet_address: fromWalletAddress,
-                    to_wallet_address: toWalletAddress,
-                    amount: parseInt(amount, 10),
-                    module_id: "gpncoahadcccmbkhdpblfiikpaiibmme",
-                    unique_id: timeStamp,
-                    module_type: "Test"
-                };
-                const response = await fetch('https://log-iam-temp.finloge.com/api/ext-transaction', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify(requestData)
-                });
-                setTimeout(async () => {
-                    // This code block will only execute after 5 seconds
-                    if (response.ok) {
-                        const paymentCreatFormResponseJson = await response.json();
-                        console.log("Payment creation form response:", paymentCreatFormResponseJson);
-                        await walletManager.sendTransactionRequest(
-                            paymentCreatFormResponseJson["full_name"],
-                            fromWalletAddress,
-                            toWalletAddress,
-                            amount,
-                            authToken,
-                            paymentCreatFormResponseJson["transaction_id"],
-                            url
-                        );
-
-                        // Optionally show success message to the user
-                        Swal.fire({
-                            text: 'Payment created successfully!',
-                            icon: "success",
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        const error = await response.json();
-                        console.error('Unexpected error:', error);
-                        Swal.fire({
-                            text: 'An unexpected error occurred. Please try again.',
-                            icon: "error",
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                }, 1000); // 5000 milliseconds = 5 seconds
-
-
-
-            } catch (error) {
-                console.error('Unexpected error:', error);
-                Swal.fire({
-                    text: 'An unexpected error occurred. Please try again.',
-                    icon: "error",
-                    confirmButtonText: 'OK'
-                });
-            }
-        });
-
-        var channel = pusher.subscribe('transaction_channel');
-        channel.bind('status', function (data) {
-            console.log(data);
-            if (timeStamp == null && localStorage.getItem("timeStamp") != null) {
-                timeStamp = localStorage.getItem("timeStamp");
-            }
-            if (data.id == timeStamp) {
-                AmagiLoader.hide();
-                Swal.fire({
-                    text: data.message,
-                    icon: "success",
-                    confirmButtonText: 'OK'
-                });
-                localStorage.removeItem("timeStamp");
-            }
-        });
+      var channel = pusher.subscribe("transaction_channel");
+      channel.bind("status", function (data) {
+        console.log(data);
+        if (timeStamp == null && localStorage.getItem("timeStamp") != null) {
+          timeStamp = localStorage.getItem("timeStamp");
+        }
+        if (data.id == timeStamp) {
+          AmagiLoader.hide();
+          Swal.fire({
+            text: data.message,
+            icon: "success",
+            confirmButtonText: "OK",
+          });
+          localStorage.removeItem("timeStamp");
+        }
+      });
     </script>
-</body>
-
+  </body>
 </html>
