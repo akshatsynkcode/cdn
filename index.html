@@ -17,6 +17,7 @@
     <button id="connectButton">Connect Wallet</button>
     <button id="checkAuth">Check Auth</button>
     <button id="fetchBalanceButton">Fetch Balance</button>
+    <button id="getAuthTokenButton">Get Current Auth Token</button>
 
     <div id="balance-loader" style="display: none">Loading...</div>
     <p id="balance">Your balance will be displayed here</p>
@@ -72,6 +73,8 @@
       const walletManager = new WalletManager(extensionId);
       const checkAuthButton = document.getElementById("checkAuth");
       const fetchBalanceButton = document.getElementById("fetchBalanceButton");
+      const getAuthTokenButton = document.getElementById("getAuthTokenButton");
+
       let authToken;
 
       // checkAuthButton.addEventListener('click', async () => {
@@ -201,6 +204,37 @@
           });
         }
       });
+
+      getAuthTokenButton.addEventListener("click", async () => {
+  try {
+    const authResponse = await walletManager.getAuth();
+    if (authResponse && authResponse.success && authResponse.authToken) {
+      Swal.fire({
+        text: `Current Auth Token: ${authResponse.authToken}`,
+        icon: "info",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK",
+      });
+      console.log("Current Auth Token:", authResponse.authToken);
+    } else {
+      Swal.fire({
+        text: "Auth token not available.",
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK",
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching auth token:", error);
+    Swal.fire({
+      text: "An error occurred while fetching the auth token.",
+      icon: "error",
+      confirmButtonColor: "#3085d6",
+      confirmButtonText: "OK",
+    });
+  }
+});
+
 
       // Make Payment
       payButton.addEventListener("click", async () => {

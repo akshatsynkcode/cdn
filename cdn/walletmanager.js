@@ -42,6 +42,29 @@ export class WalletManager {
     }
   }
 
+  /**
+   * Get the current auth token.
+   * Calls the 'getauth' action in the background script to retrieve the token.
+   */
+  async getCurrentAuthToken() {
+    try {
+      const response = await this.sendMessageToExtension("get_auth");
+      if (response && response.success && response.authToken) {
+        console.log("Current Auth Token:", response.authToken);
+        return response.authToken;
+      } else {
+        throw new Error(response.error || "Auth token not available.");
+      }
+    } catch (error) {
+      console.error("Error fetching current auth token:", error);
+      this.showErrorMessage(
+        error.message || "An error occurred while fetching the auth token."
+      );
+      return null;
+    }
+  }
+
+
   async getAuth() {
     try {
       const response = await this.sendMessageToExtension("check_auth");
