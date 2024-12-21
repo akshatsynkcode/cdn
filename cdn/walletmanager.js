@@ -157,20 +157,36 @@ export class WalletManager {
         ...data,
       });
 
-      chrome.runtime.sendMessage(
-        this.extensionId,
-        { action, ...data },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Error in sendMessageToExtension:",
-              chrome.runtime.lastError.message
-            );
-            return reject(new Error(chrome.runtime.lastError.message));
-          }
-          console.log("Response received from background:", response);
-          resolve(response);
+      // Listen for a response from the extension
+      function handleMessage(event) {
+        if (
+          event.source !== window ||
+          !event.data ||
+          event.data.type !== "FROM_EXTENSION"
+        ) {
+          return;
         }
+        window.removeEventListener("message", handleMessage);
+  
+        if (event.data.error) {
+          console.error("Error in sendMessageToExtension:", event.data.error);
+          return reject(new Error(event.data.error));
+        }
+  
+        console.log("Response received from extension:", event.data.payload);
+        resolve(event.data.payload);
+      }
+  
+      window.addEventListener("message", handleMessage);
+  
+      // Post message to the extension
+      window.postMessage(
+        {
+          type: "TO_EXTENSION",
+          action,
+          payload: data,
+        },
+        "*"
       );
     });
   }
