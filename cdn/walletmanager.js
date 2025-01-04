@@ -23,7 +23,7 @@ export class WalletManager {
           throw new Error("User did not approve the transaction.");
         }
       } else {
-        throw new Error(response.error || "Failed to open approval popup.");
+        throw new Error(response.error || "Connection Rejected By The User.");
       }
     } catch (error) {
       console.error("Error connecting wallet:", error);
