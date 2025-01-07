@@ -157,12 +157,15 @@ export class WalletManager {
         ...data,
       });
 
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2)}`;
       let resolved = false;
+
       function handleMessage(event) {
         if (
           event.source !== window ||
           !event.data ||
-          event.data.type !== "FROM_EXTENSION"
+          event.data.type !== "FROM_EXTENSION" ||
+          event.data.requestId !== requestId
         ) {
           return;
         }
@@ -186,6 +189,7 @@ export class WalletManager {
           type: "TO_EXTENSION",
           action,
           payload: data,
+          requestId
         },
         "*"
       );
