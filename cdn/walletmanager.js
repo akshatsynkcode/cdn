@@ -157,37 +157,51 @@ export class WalletManager {
         ...data,
       });
 
-      // Listen for a response from the extension
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+      let resolved = false;
+
       function handleMessage(event) {
         if (
           event.source !== window ||
           !event.data ||
-          event.data.type !== "FROM_EXTENSION"
+          event.data.type !== "FROM_EXTENSION" ||
+          event.data.requestId !== requestId
         ) {
           return;
         }
+
         window.removeEventListener("message", handleMessage);
-  
+        resolved = true;
+
         if (event.data.error) {
           console.error("Error in sendMessageToExtension:", event.data.error);
           return reject(new Error(event.data.error));
         }
-  
+
         console.log("Response received from extension:", event.data.payload);
         resolve(event.data.payload);
       }
-  
+
       window.addEventListener("message", handleMessage);
-  
-      // Post message to the extension
+
       window.postMessage(
         {
           type: "TO_EXTENSION",
           action,
           payload: data,
+          requestId
         },
         "*"
       );
+
+      const maxWaitTime = 10000; // 10 seconds
+      setTimeout(() => {
+        if (action == "detect_extension"  && !resolved) {
+            window.removeEventListener("message", handleMessage);
+            console.error("No response from extension after waiting.");
+            reject(new Error("Extension is not found or took too long to respond"));
+        }
+      }, maxWaitTime);
     });
   }
 
@@ -219,3 +233,22 @@ export class WalletManager {
     }
   }
 }
+
+let current_window = window.location.href;
+
+window.addEventListener("beforeunload", () => {
+  const action = "tab_refreshed";
+  debugger;
+  const data = { tabId: window.tabId };
+  // chrome.runtime.sendMessage({ action: "tab_refreshed", tabId: window.tabId });
+  if (current_window.includes('index') || current_window.includes('connect')){
+    window.postMessage(
+      {
+        type: "TO_EXTENSION",
+        action,
+        payload: data,
+      },
+      "*"
+    );
+  }
+});
