@@ -233,21 +233,3 @@ export class WalletManager {
     }
   }
 }
-
-let current_window = window.location.href;
-
-window.addEventListener("beforeunload", () => {
-  const action = "tab_refreshed";
-  const data = { tabId: window.tabId };
-  // chrome.runtime.sendMessage({ action: "tab_refreshed", tabId: window.tabId });
-  if (current_window.includes('index') || current_window.includes('connect')){
-    window.postMessage(
-      {
-        type: "TO_EXTENSION",
-        action,
-        payload: data,
-      },
-      "*"
-    );
-  }
-});
