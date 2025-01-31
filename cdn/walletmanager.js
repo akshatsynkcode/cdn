@@ -206,6 +206,12 @@ export class WalletManager {
   }
 
   showErrorMessage(message) {
+    if (message.includes('asynchronous')){
+      message = "Please ensure extension is installed and enabled";
+    }
+    else if (message.includes('response')){
+      message = "Please login again or contact the admin if the problem persists";
+    }
     Swal.fire({
       text: message,
       icon: "warning",
