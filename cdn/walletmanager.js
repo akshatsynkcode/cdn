@@ -194,7 +194,7 @@ export class WalletManager {
         "*"
       );
 
-      const maxWaitTime = 10000; // 10 seconds
+      const maxWaitTime = 5000; // 5 seconds
       setTimeout(() => {
         if (action == "detect_extension"  && !resolved) {
             window.removeEventListener("message", handleMessage);
