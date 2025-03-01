@@ -21,7 +21,9 @@ export class WalletManager {
    */
   async connectWallet() {
     try {
+      console.log("Requesting connection to wallet...");
       const response = await this.sendMessageToExtension("request_connection");
+      console.log(response, "response");
       if (response && response.success) {
         console.log("Approval popup opened successfully. Waiting for user approval...");
         const authToken = response.authToken;
@@ -29,6 +31,7 @@ export class WalletManager {
           console.log("User approved. Auth token received:", authToken);
           return authToken;
         } else {
+
           throw new Error("User did not approve the Connection.");
         }
       } else {
@@ -245,6 +248,10 @@ export class WalletManager {
       icon: "warning",
       confirmButtonColor: "#3085d6",
       confirmButtonText: "OK",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.reload();
+      }
     });
   }
 
