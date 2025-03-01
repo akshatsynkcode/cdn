@@ -1,37 +1,49 @@
+/**
+ * Manages wallet connections and interactions through a Chrome extension.
+ */
 export class WalletManager {
+  /**
+   * Initializes a new instance of WalletManager.
+   * @param {string} extensionId - The unique identifier for the Chrome extension.
+   * @throws {Error} If the extension ID is not provided.
+   */
   constructor(extensionId) {
     if (!extensionId) {
-      throw new Error(
-        "Extension ID is missing. Please provide a valid Extension ID."
-      );
+      throw new Error("Extension ID is missing. Please provide a valid Extension ID.");
     }
-    this.extensionId = extensionId;
+    this.extensionId = extensionId; // Store the extension ID for later use.
   }
 
+  /**
+   * Requests connection to the user's wallet via the extension.
+   * @returns {Promise<string>} A promise that resolves with the auth token if user approves.
+   * @throws {Error} If connection is not approved or fails.
+   */
   async connectWallet() {
     try {
       const response = await this.sendMessageToExtension("request_connection");
       if (response && response.success) {
-        console.log(
-          "Approval popup opened successfully. Waiting for user approval..."
-        );
+        console.log("Approval popup opened successfully. Waiting for user approval...");
         const authToken = response.authToken;
         if (authToken) {
           console.log("User approved. Auth token received:", authToken);
           return authToken;
         } else {
-          throw new Error("User did not approve the transaction.");
+          throw new Error("User did not approve the Connection.");
         }
       } else {
         throw new Error(response.error || "Connection Rejected By The User.");
       }
     } catch (error) {
       console.error("Error connecting wallet:", error);
-      this.showErrorMessage(
-        error.message || "An error occurred during wallet connection."
-      );
+      this.showErrorMessage(error.message || "An error occurred during wallet connection.");
     }
   }
+
+  /**
+   * Detects if the wallet extension is installed and available.
+   * @returns {Promise<boolean>} A promise that resolves to true if the extension is detected, false otherwise.
+   */
   async detectExtension() {
     try {
       const response = await this.sendMessageToExtension("detect_extension");
@@ -43,8 +55,8 @@ export class WalletManager {
   }
 
   /**
-   * Get the current auth token.
-   * Calls the 'getauth' action in the background script to retrieve the token.
+   * Retrieves the current authentication token from the extension.
+   * @returns {Promise<string|null>} A promise that resolves to the current auth token or null if not available.
    */
   async getCurrentAuthToken() {
     try {
@@ -57,14 +69,15 @@ export class WalletManager {
       }
     } catch (error) {
       console.error("Error fetching current auth token:", error);
-      this.showErrorMessage(
-        error.message || "An error occurred while fetching the auth token."
-      );
+      this.showErrorMessage(error.message || "An error occurred while fetching the auth token.");
       return null;
     }
   }
 
-
+  /**
+   * Wrapper function to handle authentication checks.
+   * @returns {Promise<any>} A promise that resolves with the authentication check response.
+   */
   async getAuth() {
     try {
       const response = await this.sendMessageToExtension("check_auth");
@@ -75,6 +88,10 @@ export class WalletManager {
     }
   }
 
+  /**
+   * Fetches and updates the user's balance from the wallet.
+   * @returns {Promise<number|boolean>} The current balance if successful, or false if the fetch fails.
+   */
   async fetchAndUpdateBalance() {
     const loader = document.getElementById("balance-loader");
     try {
@@ -101,7 +118,7 @@ export class WalletManager {
   }
 
   /**
-   * Send a transaction request to the Chrome extension.
+   * Sends a transaction request to the wallet via the Chrome extension.
    * @param {string} username - The user's username.
    * @param {string} fromWalletAddress - The sender's wallet address.
    * @param {string} toWalletAddress - The recipient's wallet address.
@@ -109,6 +126,7 @@ export class WalletManager {
    * @param {string} authToken - The user's authorization token.
    * @param {string} transactionId - The transaction ID.
    * @param {string} url - The URL of Pusher.
+   * @returns {Promise<any>} A promise that resolves with the transaction response or an error if the transaction fails.
    */
   async sendTransactionRequest(
     username,
@@ -150,6 +168,12 @@ export class WalletManager {
     }
   }
 
+  /**
+   * Communicates with the Chrome extension by sending messages.
+   * @param {string} action - The action type to send to the extension.
+   * @param {object} data - Additional data to send with the action.
+   * @returns {Promise<any>} A promise that resolves with the response from the extension or rejects if an error occurs.
+   */
   sendMessageToExtension(action, data = {}) {
     return new Promise((resolve, reject) => {
       console.log(`Sending message to extension with action: ${action}`, {
@@ -194,7 +218,7 @@ export class WalletManager {
         "*"
       );
 
-      const maxWaitTime = 5000; // 5 seconds
+      const maxWaitTime = 10000; // 10 seconds
       setTimeout(() => {
         if (action == "detect_extension"  && !resolved) {
             window.removeEventListener("message", handleMessage);
@@ -205,6 +229,10 @@ export class WalletManager {
     });
   }
 
+  /**
+   * Displays an error message to the user using a modal dialog.
+   * @param {string} message - The error message to display.
+   */
   showErrorMessage(message) {
     if (message.includes('asynchronous')){
       message = "Please ensure extension is installed and enabled";
@@ -220,6 +248,11 @@ export class WalletManager {
     });
   }
 
+  /**
+   * Formats a numeric amount into a more readable format with abbreviations for thousands, millions, or billions.
+   * @param {string|number} amount - The amount to format.
+   * @returns {string} The formatted amount.
+   */
   async formatAmount(amount) {
     // Convert the amount to a number
     amount = parseFloat(amount);
