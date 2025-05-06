@@ -21,14 +21,10 @@ export class WalletManager {
    */
   async connectWallet() {
     try {
-      console.log("Requesting connection to wallet...");
       const response = await this.sendMessageToExtension("request_connection");
-      console.log(response, "response");
       if (response && response.success) {
-        console.log("Approval popup opened successfully. Waiting for user approval...");
         const authToken = response.authToken;
         if (authToken) {
-          console.log("User approved. Auth token received:", authToken);
           return authToken;
         } else {
 
@@ -155,7 +151,6 @@ export class WalletManager {
       );
 
       if (response && response.success) {
-        console.log("Transaction request sent successfully:", response);
         return response;
       } else {
         throw new Error(
@@ -205,7 +200,6 @@ export class WalletManager {
           return reject(new Error(event.data.error));
         }
 
-        console.log("Response received from extension:", event.data.payload);
         resolve(event.data.payload);
       }
 
